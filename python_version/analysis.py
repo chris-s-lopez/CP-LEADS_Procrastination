@@ -3,6 +3,7 @@ import numpy as np
 from scipy.stats import ttest_ind
 import matplotlib.pyplot as plt
 import seaborn as sns
+import contextlib
 
 pd.set_option('display.max_columns', None)
 
@@ -58,19 +59,19 @@ variables = [
     "w1tsq14"
 ]
 
-# Descriptive statistics for all variables above
-print("\nDescriptive statistics by gender:\n")
-for var in variables:
-    desc = df.groupby("gender")[var].describe()
-    print(f"\nVariable: {var}\n", desc)
+with open("analysis_output.txt", "w") as f:
+    with contextlib.redirect_stdout(f):
+        print("Descriptive Statistics by Gender:\n")
+        for var in variables:
+            desc = df.groupby("gender")[var].describe()
+            print(f"\nVariable: {var}\n", desc)
 
-#Two-sample t-tests
-print("\nTwo-sample t-tests (Male vs Female):\n")
-for var in variables:
-    male_values = df[df["gender"] == "Male"][var]
-    female_values = df[df["gender"] == "Female"][var]
-    t_stat, p_val = ttest_ind(male_values, female_values, equal_var=False)
-    print(f"{var}: t = {t_stat:.3f}, p = {p_val:.4f}")
+        print("\nTwo-sample t-tests (Male vs Female):\n")
+        for var in variables:
+            male_values = df[df["gender"] == "Male"][var]
+            female_values = df[df["gender"] == "Female"][var]
+            t_stat, p_val = ttest_ind(male_values, female_values, equal_var=False)
+            print(f"{var}: t = {t_stat:.3f}, p = {p_val:.4f}")
 
 #Boxplots for each variable 
 for var in variables:
@@ -85,4 +86,3 @@ for var in variables:
 
 # Save processed data
 df.to_csv("UROP_data_full.csv", index=False)
-

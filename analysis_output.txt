@@ -1,0 +1,61 @@
+Descriptive Statistics by Gender:
+
+
+Variable: pro_sum
+         count       mean      std  min   25%   50%   75%   max
+gender                                                        
+Female  188.0  14.941489  4.66203  5.0  12.0  15.0  18.0  25.0
+Male     35.0  15.000000  4.43250  5.0  12.5  15.0  18.5  22.0
+
+Variable: w1commithrs
+         count       mean        std  min   25%   50%   75%   max
+gender                                                          
+Female  188.0  28.707447  17.750636  0.0  15.0  25.5  40.0  80.0
+Male     35.0  26.942857  15.977821  2.0  16.5  25.0  35.0  70.0
+
+Variable: w1commitnum
+         count      mean       std  min  25%  50%  75%   max
+gender                                                     
+Female  188.0  4.696809  2.986349  0.0  3.0  4.0  6.0  19.0
+Male     35.0  5.342857  3.235309  1.0  3.5  5.0  6.5  16.0
+
+Variable: w1freetime
+         count      mean       std  min  25%  50%  75%  max
+gender                                                    
+Female  188.0  2.585106  0.592458  1.0  2.0  3.0  3.0  4.0
+Male     35.0  2.600000  0.650791  2.0  2.0  3.0  3.0  4.0
+
+Variable: w1commitoverw
+         count      mean       std  min  25%  50%  75%  max
+gender                                                    
+Female  188.0  3.292553  0.898333  1.0  3.0  3.0  4.0  5.0
+Male     35.0  3.000000  0.939336  1.0  2.0  3.0  4.0  5.0
+
+Variable: w3tsq8
+         count      mean       std  min  25%  50%  75%  max
+gender                                                    
+Female  188.0  4.984043  1.471570  1.0  4.0  5.0  6.0  7.0
+Male     35.0  4.371429  1.330319  2.0  4.0  4.0  5.0  7.0
+
+Variable: w1tsq13
+         count      mean       std  min  25%  50%  75%  max
+gender                                                    
+Female  188.0  5.898936  1.140128  1.0  5.0  6.0  7.0  7.0
+Male     35.0  5.171429  1.403477  2.0  4.0  5.0  6.0  7.0
+
+Variable: w1tsq14
+         count      mean       std  min  25%  50%  75%  max
+gender                                                    
+Female  188.0  4.345745  1.430244  1.0  3.0  4.0  5.0  7.0
+Male     35.0  3.857143  1.593052  1.0  3.0  4.0  5.0  7.0
+
+Two-sample t-tests (Male vs Female):
+
+pro_sum: t = 0.071, p = 0.9436
+w1commithrs: t = -0.589, p = 0.5583
+w1commitnum: t = 1.098, p = 0.2782
+w1freetime: t = 0.126, p = 0.9003
+w1commitoverw: t = -1.703, p = 0.0952
+w3tsq8: t = -2.459, p = 0.0174
+w1tsq13: t = -2.894, p = 0.0060
+w1tsq14: t = -1.692, p = 0.0976
