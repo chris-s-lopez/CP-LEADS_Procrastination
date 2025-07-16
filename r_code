@@ -1,0 +1,306 @@
+title: "sp25"
+format: html
+---
+## Data Import and Cleaning File
+## Load Libraries
+```{r}
+library(tidyverse)
+```
+##Load Data
+```{r}
+dfr <- read_csv("../data/sp25.csv", skip = 3, col_names = FALSE)
+
+header <- read_csv("../data/sp25.csv", n_max=1) |>
+  names() #extracting row 1 
+
+names(dfr) <- header #adding row 1 as header 
+
+##Data Cleaning
+```{r}
+df <- dfr |>   #pipe 
+  filter(w1status == "Completed")
+
+# 5 started , 225 completed
+#df, only looking at the completed 225 survey responses
+```
+
+##Inspection
+```{r}
+df |>
+  ggplot(aes(x=w1timetaken/60)) +  #aesthetic mapping, time taken on x-axis
+  geom_histogram(bins = 60)+
+  theme_minimal()
+```
+
+##Questions of interest
+```{r}
+df1 <- subset(df, select = c(rid,proc1, proc2, proc3, proc4, proc5, w1commitnum, w1commithrs, w1commitoverw, w1freetime,w1tsq1
+,w1tsq2,w3tsq3, w1tsq3, w1tsq4,w3tsq4, w1tsq5 ,w1tsq6,w3tsq5, w1tsq7, w1tsq8, w3tsq6, w1tsq9, w1tsq10,w3tsq7, w1tsq11,w1tsq12, w3tsq8, w1tsq13,w1tsq14, gendermale,genderfemal,gendernonbinary,gendernoid))
+
+write.csv(df1, file = "UROP.data.csv", row.names=FALSE)
+```
+
+##Gender Variables
+```{r}
+#countrefusegender <- table(df1$genderrefuse == "1")
+# 0 refused to answer
+# remove from the data set 
+
+countnotlistedgender <- table(df1$gendernoid == "1")
+# 1 gender not listed
+
+#countthirdgender <- table(df1$genderthird == "1")
+# 0 third gender 
+#remove from data set 
+
+countnonbinary <- table(df1$gendernonbinary == "1")
+# 3 non-binary
+
+countfemale <- table(df1$genderfemal == "1")
+# 189 female
+
+countmale <- table(df1$gendermale == "1")
+# 35 male
+
+gender <- c(countmale, countfemale,countnotlistedgender,countnonbinary,countrefusegender, countthirdgender)
+```
+
+##Score Procrastination scale
+```{r}
+df1 <- df1 |> 
+  group_by(rid) |>
+  mutate(pro_sum = sum(proc1, proc2, proc3, proc4, proc5))
+```
+
+## 3-Item Present Orientation Scale 
+```{r}
+#scored 1-7 
+#higher score = more future focused, daydreaming, thinking about missed opportunities > more prone to procrastination?? 
+#lower score = stronger present focus (rooted in the now) > immediate tasks 
+ #facid wrap for gender 
+
+present_score <- df1 |>
+  select(w3tsq8, w1tsq13, w1tsq14)
+
+cor(present_score, df1$pro_sum)
+
+correlations <- tibble(
+  Item = c("Daydream About Future", "Think About Future", "Missed Opportunities"),
+  Correlation = c(0.08, -0.12, 0.31)
+)
+```
+##Correlation Between Present Orientation Items and Procrastination
+```{r}
+library(ggplot2)
+
+ggplot(correlations, aes(x = reorder(Item, Correlation), y = Correlation, fill = Correlation > 0)) +
+  geom_col() +
+  geom_text(aes(label = round(Correlation, 2)), vjust = -0.5) +
+  scale_fill_manual(values = c("#f4a582", "#92c5de")) +
+  labs(title = "Correlation Between Present Orientation Items and Procrastination",
+       x = "Present Orientation Item",
+       y = "Correlation with Procrastination") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  coord_flip()
+```
+##Histogram of pro_sum + Boxplot Stats
+```{r}
+hist(df1$pro_sum, main= "Procrastination Scores", col="#92c5de", xlab= 'Procrastion Score', ylab = 'Count')
+
+#Boxplot stats 
+box_stats <- boxplot.stats(df1$pro_sum)
+min_value <- box_stats$stats[1] # Min: 5 
+median_value <- box_stats$stats[3] #Median: 15 
+max_value <- box_stats$stats[5] #Max: 25 
+mean_value <- mean(df1$pro_sum) # Mean: 14.92444
+
+#we'll use the mean for the ANOVA or t-test
+#since its normal distributed 
+#group based on the mean 
+# lower than mean - more likely to procrastinate 
+#higher than mean, less likely to procrastinate 
+
+#based on pro_sum 
+procrastinators <- df1$pro_sum[df1$pro_sum < median_value]
+non_procrastinators <- df1$pro_sum[df1$pro_sum > median_value]
+```
+
+##Commitments Mean + Median
+```{r}
+mean_commithrs <- mean(df1$w1commithrs)
+median_commithrs <- median(df1$w1commithrs)
+#mean hrs = 28.52
+#median hrs = 25 
+
+low_commithrs <- df1$w1commithrs[df1$w1commithrs < median_commithrs]
+high_commithrs <- df1$w1commithrs[df1$w1commithrs > median_commithrs]
+#did median because distribution was skewed
+#greater than 25 hrs = high commitment group
+#else = low commitment group 
+
+mean_commitnum <- mean(df1$w1commitnum)
+median_commitnum <- median(df1$w1commitnum)
+#mean = 4.817778
+#median = 4 --- skewed
+
+low_commitnum <- df1$w1commitnum[df1$w1commitnum < median_commitnum]
+high_commitnum <- df1$w1commitnum[df1$w1commitnum > median_commitnum]
+#greater than 4 = high commitment group 
+#else = low commitment group
+
+mean_free <- mean(df1$w1freetime)
+median_free <- median(df1$w1freetime)
+#mean =  2.582222
+#median = 3
+
+low_free <- df1$w1freetime[df1$w1freetime < median_free] #high commit
+high_free <- df1$w1freetime[df1$w1freetime > median_free] #low commit
+# greater than 3 = low commitment group 
+#else = high commitment group
+
+mean_commitoverw <- mean(df1$w1commitoverw)
+median_commitoverw <- median(df1$w1commitoverw)
+#mean = 3.248889
+#median 3
+
+low_commitoverw <- df1$w1commitoverw[df1$w1commitoverw < median_commitoverw]
+high_commitoverw <- df1$w1commitoverw[df1$w1commitoverw > median_commitoverw]
+#greater than 3 = high commitment
+#else = low commitment 
+```
+
+##Z-scores
+```{r}
+#commit hrs 
+z_commithrs <- (df1$w1commithrs - mean_commithrs)/ sd(df1$w1commithrs)
+df1$z_commithrs <- z_commithrs
+
+#z - pro_sum 
+z_pro_sum <- (df1$pro_sum - mean_value)/ sd(df1$pro_sum)
+df1$z_pro_sum <- z_pro_sum
+
+#z - commit num
+z_commitnum <- (df1$w1commitnum - mean_commitnum)/ sd(df1$w1commitnum)
+df1$z_commitnum <- z_commitnum
+
+#z-  free
+z_free <- (df1$w1freetime - mean_free)/ sd(df1$w1freetime)
+df1$z_free <- z_free
+
+#z- commit overw
+z_commitoverw <- (df1$w1commitoverw - mean_commitoverw)/ sd(df1$w1commitoverw)
+df1$z_commitoverw <- z_commitoverw
+
+#z-w1tsq1
+z_w1tsq1 <- (df1$w1tsq1 - mean(df1$w1tsq1))/ sd(df1$w1tsq1)
+df1$z_w1tsq1 <- z_w1tsq1
+
+#z-w1tsq2
+z_w1tsq2 <- (df1$w1tsq2 - mean(df1$w1tsq2))/ sd(df1$w1tsq2)
+df1$z_w1tsq2 <- z_w1tsq2
+
+#z-w3tsq3
+z_w3tsq3 <- (df1$w3tsq3 - mean(df1$w3tsq3))/ sd(df1$w3tsq3)
+df1$z_w3tsq3 <- z_w3tsq3
+
+#z-w1tsq3
+z_w1tsq3 <- (df1$w1tsq3 - mean(df1$w1tsq3))/ sd(df1$w1tsq3)
+df1$z_w1tsq3 <- z_w1tsq3
+
+#z-w1tsq4
+z_w1tsq4 <- (df1$w1tsq4 - mean(df1$w1tsq4))/ sd(df1$w1tsq4)
+df1$z_w1tsq4 <- z_w1tsq4
+
+#z-w3tsq3
+z_w3tsq4 <- (df1$w3tsq4 - mean(df1$w3tsq4))/ sd(df1$w3tsq4)
+df1$z_w3tsq4 <- z_w3tsq4
+
+#z-w1tsq5
+z_w1tsq5 <- (df1$w1tsq5 - mean(df1$w1tsq5))/ sd(df1$w1tsq5)
+df1$z_w1tsq5 <- z_w1tsq5
+```
+
+##Grouping
+```{r}
+df1 <- df1 |> 
+  mutate(pro_group = ifelse(pro_sum > median_value, "Low Procrastination", "High Procrastination"),
+         commit_group = ifelse(w1commithrs > median_commithrs, "High Commitment", "Low Commitment"))
+```
+
+##Correlations
+```{r}
+#correlations with z-scores 
+cor_matrix <- df1 |>
+  select(z_pro_sum, z_commithrs, z_commitnum, z_free, z_commitoverw) |>
+  cor()
+
+# Visualize it
+#library(corrplot)
+#corrplot(cor_matrix, method = "color", addCoef.col = "black", tl.cex = .8)
+
+# Rename rows and columns of the correlation matrix
+colnames(cor_matrix) <- c("id","Procrastination", "Commitment Hrs", "Commitment #", "Free Time", "Overwhelmed")
+rownames(cor_matrix) <- colnames(cor_matrix)
+
+install.packages("ggcorrplot")
+library(ggcorrplot)
+ggcorrplot(cor_matrix,
+  hc.order = TRUE,
+  lab = TRUE,
+  ggtheme = ggplot2::theme_grey,colors = c("#f4a582", "white", "#92c5de"))
+
+#weak correlations :(
+```
+##Present Items correlated with Procrastination
+```{r}
+present_score <- df1 |> select(w3tsq8, w1tsq13, w1tsq14)
+cor(present_score, df1$pro_sum)
+
+# Create a dataframe of correlations
+correlations <- tibble(
+  Item = c("Daydream About Future", "Think About Future", "Missed Opportunities"),
+  Correlation = c(0.08, -0.12, 0.31)
+)
+
+library(ggplot2)
+
+ggplot(correlations, aes(x = reorder(Item, Correlation), y = Correlation, fill = Correlation > 0)) +
+  geom_col() +
+  geom_text(aes(label = round(Correlation, 2)), vjust = -0.5) +
+  scale_fill_manual(values = c("#f4a582", "#92c5de")) +
+  labs(x = "Present Orientation Item",
+       y = "Correlation with Procrastination") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  coord_flip()
+
+##Gender 
+```{r}
+# Step 1: Make sure only Male and Female are included
+df1 <- df1 |>
+  mutate(gender = case_when(
+    gendermale == "1" ~ "Male",
+    genderfemal == "1" ~ "Female",
+    TRUE ~ NA_character_
+  )) |>
+  filter(!is.na(gender))
+
+# Step 2: Create a summary table with counts
+gender_counts <- df1 |>
+  group_by(gender) |>
+  summarise(n = n())
+
+# Step 3: Plot with boxplot, jitter, and n labels
+library(ggplot2)
+
+ggplot(df1, aes(x = gender, y = pro_sum, fill = gender)) +
+  geom_boxplot(alpha = 0.3, outlier.shape = NA) +
+  geom_jitter(width = 0.2, alpha = 0.3, color = "#073763ff") +
+  geom_text(data = gender_counts, aes(x = gender, y = max(df1$pro_sum) + 1, label = paste0("n = ", n)), inherit.aes = FALSE) + #df1$pro_sum
+  scale_fill_manual(values = c("Male" = "#92c5de", "Female" = "#f4a582")) +
+  labs(x = "Gender",
+       y = "Procrastination Score") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
